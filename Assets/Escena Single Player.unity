@@ -718,7 +718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 977636ee2609321419bd729e025b5073, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textoMarcador: {fileID: 0}
+  textoMarcador: {fileID: 1683180132}
   luzDestello: {fileID: 321354115}
   sonidoMalla: {fileID: 174978201}
   duracionBrillo: 0.4
@@ -2556,6 +2556,7 @@ GameObject:
   - component: {fileID: 830476847}
   - component: {fileID: 830476846}
   - component: {fileID: 830476845}
+  - component: {fileID: 830476853}
   m_Layer: 0
   m_Name: BalonGrabbable (4)
   m_TagString: ball
@@ -2596,6 +2597,7 @@ MonoBehaviour:
   tagsConsideradosSuelo:
   - rebote_suelo
   - rebote_madera
+  - rebote_aro
   audioSource: {fileID: 786640041}
   sonidoRespawn: {fileID: 8300000, guid: 17994bb51a9b02b4fb6de6944af39b05, type: 3}
   volumenRespawn: 1.5
@@ -2611,7 +2613,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1464721f2283eb14e94a33e812b47be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _interactableView: {fileID: 830476850}
+  _interactableView: {fileID: 830476853}
   _whenHover:
     m_PersistentCalls:
       m_Calls: []
@@ -2714,7 +2716,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 830476851}
   _rigidbody: {fileID: 830476852}
-  _physicsGrabbable: {fileID: 0}
+  _physicsGrabbable: {fileID: 830476849}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -2768,7 +2770,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 830476843}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.2
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -2787,6 +2789,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &830476853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 830476843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 830476851}
+  _rigidbody: {fileID: 830476852}
+  _grabSource: {fileID: 830476844}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 830476849}
 --- !u!1 &952032149
 GameObject:
   m_ObjectHideFlags: 0
@@ -3413,6 +3438,7 @@ GameObject:
   - component: {fileID: 1153233302}
   - component: {fileID: 1153233301}
   - component: {fileID: 1153233300}
+  - component: {fileID: 1153233309}
   m_Layer: 0
   m_Name: BalonGrabbable (5)
   m_TagString: ball
@@ -3453,6 +3479,7 @@ MonoBehaviour:
   tagsConsideradosSuelo:
   - rebote_suelo
   - rebote_madera
+  - rebote_aro
   audioSource: {fileID: 1974722772}
   sonidoRespawn: {fileID: 8300000, guid: 17994bb51a9b02b4fb6de6944af39b05, type: 3}
   volumenRespawn: 1.5
@@ -3468,7 +3495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1464721f2283eb14e94a33e812b47be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _interactableView: {fileID: 1153233306}
+  _interactableView: {fileID: 1153233309}
   _whenHover:
     m_PersistentCalls:
       m_Calls: []
@@ -3592,7 +3619,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 1153233307}
   _rigidbody: {fileID: 1153233308}
-  _physicsGrabbable: {fileID: 0}
+  _physicsGrabbable: {fileID: 1153233305}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -3646,7 +3673,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1153233298}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.2
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -3665,6 +3692,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &1153233309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153233298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 1153233307}
+  _rigidbody: {fileID: 1153233308}
+  _grabSource: {fileID: 1153233299}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 1153233305}
 --- !u!1 &1155415225
 GameObject:
   m_ObjectHideFlags: 0
@@ -6152,6 +6202,7 @@ GameObject:
   - component: {fileID: 1979612996}
   - component: {fileID: 1979613004}
   - component: {fileID: 1979613003}
+  - component: {fileID: 1979613005}
   - component: {fileID: 1979613002}
   - component: {fileID: 1979613001}
   - component: {fileID: 1979613000}
@@ -6198,6 +6249,7 @@ MonoBehaviour:
   tagsConsideradosSuelo:
   - rebote_suelo
   - rebote_madera
+  - rebote_aro
   audioSource: {fileID: 103909034}
   sonidoRespawn: {fileID: 8300000, guid: 17994bb51a9b02b4fb6de6944af39b05, type: 3}
   volumenRespawn: 1.5
@@ -6213,7 +6265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1464721f2283eb14e94a33e812b47be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _interactableView: {fileID: 1979613002}
+  _interactableView: {fileID: 1979613005}
   _whenHover:
     m_PersistentCalls:
       m_Calls: []
@@ -6316,7 +6368,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 1979613003}
   _rigidbody: {fileID: 1979613004}
-  _physicsGrabbable: {fileID: 0}
+  _physicsGrabbable: {fileID: 1979613001}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -6370,7 +6422,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979612995}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.2
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -6389,6 +6441,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &1979613005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979612995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 1979613003}
+  _rigidbody: {fileID: 1979613004}
+  _grabSource: {fileID: 1979612996}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 1979613001}
 --- !u!1 &1981731829
 GameObject:
   m_ObjectHideFlags: 0
@@ -6801,6 +6876,7 @@ GameObject:
   - component: {fileID: 2102757686}
   - component: {fileID: 2102757685}
   - component: {fileID: 2102757684}
+  - component: {fileID: 2102757692}
   m_Layer: 0
   m_Name: BalonGrabbable (6)
   m_TagString: ball
@@ -6841,6 +6917,7 @@ MonoBehaviour:
   tagsConsideradosSuelo:
   - rebote_suelo
   - rebote_madera
+  - rebote_aro
   audioSource: {fileID: 1814857812}
   sonidoRespawn: {fileID: 8300000, guid: 17994bb51a9b02b4fb6de6944af39b05, type: 3}
   volumenRespawn: 1.5
@@ -6856,7 +6933,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1464721f2283eb14e94a33e812b47be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _interactableView: {fileID: 0}
+  _interactableView: {fileID: 2102757692}
   _whenHover:
     m_PersistentCalls:
       m_Calls: []
@@ -6959,7 +7036,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 2102757690}
   _rigidbody: {fileID: 2102757691}
-  _physicsGrabbable: {fileID: 0}
+  _physicsGrabbable: {fileID: 2102757688}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -7013,7 +7090,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2102757682}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.2
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -7032,6 +7109,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &2102757692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102757682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 2102757690}
+  _rigidbody: {fileID: 2102757691}
+  _grabSource: {fileID: 2102757683}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 2102757688}
 --- !u!1 &2138088338
 GameObject:
   m_ObjectHideFlags: 0
@@ -15080,7 +15180,7 @@ GameObject:
   - component: {fileID: 613181051821775259}
   m_Layer: 0
   m_Name: TopFloorScreen
-  m_TagString: Untagged
+  m_TagString: rebote_suelo
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

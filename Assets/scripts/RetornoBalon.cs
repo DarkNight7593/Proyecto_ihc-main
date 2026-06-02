@@ -22,14 +22,15 @@ public class RetornoBalon : MonoBehaviour
 
     private float tiempoEnElSuelo = 0f;
     private bool estaEnElSuelo = false;
+    
+    // NUEVO: Contador para saber cuántos objetos de suelo estamos tocando al mismo tiempo
+    private int contactosSuelo = 0; 
     private Rigidbody rb;
 
     void Start()
     {
-        // Buscamos el Rigidbody en el objeto actual
         rb = GetComponent<Rigidbody>();
 
-        // (Opcional) Si olvidaste asignar el AudioSource en el Inspector, intentamos buscarlo automáticamente
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
@@ -38,6 +39,14 @@ public class RetornoBalon : MonoBehaviour
 
     void Update()
     {
+        // PREVENCIÓN: Si el jugador agarra el balón, Meta XR suele poner el Rigidbody en Kinematic.
+        // Si es Kinematic (fuera de nuestro teletransporte), detenemos el contador para que no desaparezca de tus manos.
+        if (rb != null && rb.isKinematic)
+        {
+            ResetearContadores();
+            return;
+        }
+
         if (estaEnElSuelo)
         {
             tiempoEnElSuelo += Time.deltaTime;
@@ -53,6 +62,18 @@ public class RetornoBalon : MonoBehaviour
     {
         if (EsUnaSuperficieValida(collision.gameObject))
         {
+            contactosSuelo++; // Sumamos un contacto válido
+            estaEnElSuelo = true;
+        }
+    }
+
+    // NUEVO: Failsafe (Salvavidas) 
+    // Si Unity por algún motivo "pierde" el evento Enter, el Stay nos asegura que sepa que está en el suelo.
+    void OnCollisionStay(Collision collision)
+    {
+        if (!estaEnElSuelo && EsUnaSuperficieValida(collision.gameObject))
+        {
+            contactosSuelo = 1;
             estaEnElSuelo = true;
         }
     }
@@ -61,8 +82,13 @@ public class RetornoBalon : MonoBehaviour
     {
         if (EsUnaSuperficieValida(collision.gameObject))
         {
-            estaEnElSuelo = false;
-            tiempoEnElSuelo = 0f;
+            contactosSuelo--; // Restamos un contacto
+
+            // Solo si dejamos de tocar TODOS los suelos válidos, detenemos el reloj
+            if (contactosSuelo <= 0)
+            {
+                ResetearContadores();
+            }
         }
     }
 
@@ -87,7 +113,6 @@ public class RetornoBalon : MonoBehaviour
 
     private void TeletransportarBalon()
     {
-        // 1. Frenamos las físicas ANTES de moverlo para un teletransporte limpio
         if (rb != null)
         {
             rb.isKinematic = true; 
@@ -95,25 +120,27 @@ public class RetornoBalon : MonoBehaviour
             rb.angularVelocity = Vector3.zero;  
         }
 
-        // 2. Movemos el balón a la posición de retorno
         transform.position = puntoDeRetorno.position;
         transform.rotation = puntoDeRetorno.rotation;
 
-        // 3. ¡REPRODUCIMOS EL SONIDO DE RESPAWN!
         if (audioSource != null && sonidoRespawn != null)
         {
-            // PlayOneShot permite que el sonido suene de principio a fin sin cortarse
-            audioSource.volume=volumenRespawn;
+            audioSource.volume = volumenRespawn;
             audioSource.PlayOneShot(sonidoRespawn);
         }
 
-        // 4. Volvemos a encender la física
         if (rb != null)
         {
             rb.isKinematic = false; 
         }
 
-        // 5. Reiniciamos los contadores
+        ResetearContadores();
+    }
+
+    // NUEVO: Función auxiliar para limpiar variables de forma segura
+    private void ResetearContadores()
+    {
+        contactosSuelo = 0;
         estaEnElSuelo = false;
         tiempoEnElSuelo = 0f;
     }
