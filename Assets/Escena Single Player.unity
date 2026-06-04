@@ -627,8 +627,8 @@ Transform:
   m_GameObject: {fileID: 174978195}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.72240096, z: -0, w: 0.6914744}
-  m_LocalPosition: {x: 0.0683, y: 2.205, z: -3.6825}
-  m_LocalScale: {x: 0.5344757, y: 0.0024476137, z: 0.56948805}
+  m_LocalPosition: {x: 0.065, y: 2.191, z: -3.682}
+  m_LocalScale: {x: 0.01, y: 0.0024476137, z: 0.01}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 321354114}
@@ -2770,7 +2770,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 830476843}
   serializedVersion: 4
-  m_Mass: 0.2
+  m_Mass: 0.1
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -2913,7 +2913,7 @@ Transform:
   m_GameObject: {fileID: 957439068}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.359, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3673,7 +3673,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1153233298}
   serializedVersion: 4
-  m_Mass: 0.2
+  m_Mass: 0.1
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -4038,7 +4038,7 @@ Transform:
   m_GameObject: {fileID: 1219850159}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.07894993, y: 0.809, z: -0.21899986}
+  m_LocalPosition: {x: -0.24415007, y: 0.809, z: -0.21899986}
   m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6225,7 +6225,7 @@ Transform:
   m_GameObject: {fileID: 1979612995}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.047, y: 2.134, z: -3.3645}
+  m_LocalPosition: {x: -0.04, y: 2.885, z: -3.3645}
   m_LocalScale: {x: 0.8452, y: 0.7570358, z: 0.7942023}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6422,7 +6422,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979612995}
   serializedVersion: 4
-  m_Mass: 0.2
+  m_Mass: 0.1
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -6437,7 +6437,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
@@ -7090,7 +7090,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2102757682}
   serializedVersion: 4
-  m_Mass: 0.2
+  m_Mass: 0.1
   m_Drag: 0.3
   m_AngularDrag: 0.08
   m_CenterOfMass: {x: 0, y: 0, z: 0}
