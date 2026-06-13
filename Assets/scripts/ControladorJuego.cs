@@ -59,6 +59,20 @@ public class ControladorJuego : MonoBehaviour
         }
     }
 
+    public void RestarPunto()
+    {
+        // Solo restamos si estamos en Desafío y en plena fase de juego
+        if (modoActual == ModoJuego.Desafio && faseActual == FaseDesafio.Jugando)
+        {
+            puntosTotales -= 1;
+            
+            // El truco mágico: Mathf.Max asegura que si el valor baja de 0, se quede clavado en 0
+            puntosTotales = Mathf.Max(0, puntosTotales); 
+            
+            ActualizarMarcadorUI();
+        }
+    }
+
     // --- BOTÓN MODO NORMAL ---
     public void ActivarModoNormal()
     {
