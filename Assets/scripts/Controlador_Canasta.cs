@@ -8,6 +8,10 @@ public class Controlador_Canasta : MonoBehaviour
     public AudioSource sonidoMalla;
     public float duracionBrillo = 0.4f;
 
+    [Header("Ajustes para Aro Dinámico")]
+    [Tooltip("Tiempo en segundos que el aro ignorará el balón tras anotar para evitar dobles canastas (Recomendado: 1.5 a 2 segundos)")]
+    public float tiempoBloqueoCanasta = 1.8f; 
+
     private bool canastaMarcada = false;
 
     void Start()
@@ -39,11 +43,19 @@ public class Controlador_Canasta : MonoBehaviour
         if (luzDestello != null) luzDestello.enabled = true;
         if (sonidoMalla != null) sonidoMalla.Play();
 
-        // 3. ESPERAMOS
+        // 3. ESPERAMOS LA DURACIÓN DEL BRILLO PARA APAGAR LA LUZ
         yield return new WaitForSeconds(duracionBrillo);
-
-        // 4. APAGAMOS LUZ Y REINICIAMOS
         if (luzDestello != null) luzDestello.enabled = false;
+
+        // 4. TRUCO DE SEGURIDAD: Esperamos un tiempo extra total antes de permitir otra canasta.
+        // Esto le da tiempo de sobra al balón para caer por completo y alejarse del aro dinámico.
+        float tiempoRestanteDeBloqueo = tiempoBloqueoCanasta - duracionBrillo;
+        if (tiempoRestanteDeBloqueo > 0)
+        {
+            yield return new WaitForSeconds(tiempoRestanteDeBloqueo);
+        }
+
+        // 5. REINICIAMOS EL SENSOR
         canastaMarcada = false; 
     }
 }
