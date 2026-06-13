@@ -32,6 +32,22 @@ public class ControladorJuego : MonoBehaviour
     private float tiempoRestante;
     private Coroutine rutinaDesafioActual; // Para poder detenerla si cambiamos de modo
 
+    [Header("🎵 Sistema de Música de Fondo")]
+    [Tooltip("El componente AudioSource asignado al GameManager")]
+    public AudioSource fuenteMusica;
+    [Tooltip("Canción para el Modo Normal")]
+    public AudioClip musicaNormal;
+    [Tooltip("Canción intensa para el Modo Desafío")]
+    public AudioClip musicaDesafio;
+    [Tooltip("Tiempo en segundos que tardará en desvanecerse la música al cambiar")]
+    public float duracionTransicion = 0.8f;
+
+    [Range(0f, 1f)]
+    [Tooltip("Volumen general de la música (0 = Silencio, 1 = Máximo)")]
+    public float volumenMaster = 0.5f; // Empezamos a mitad de volumen por defecto
+
+    private Coroutine rutinaTransicionMusica;
+
     void Awake()
     {
         if (Instancia == null) Instancia = this;
@@ -40,6 +56,15 @@ public class ControladorJuego : MonoBehaviour
 
     void Start()
     {
+        // Si no se asignó en el inspector, intentamos obtener el AudioSource del mismo objeto
+        if (fuenteMusica == null) fuenteMusica = GetComponent<AudioSource>();
+
+        if (fuenteMusica != null)
+        {
+            fuenteMusica.volume = volumenMaster;
+            fuenteMusica.loop = true; // Nos aseguramos de que repita la música
+        }
+
         ActivarModoNormal(); // Empezamos en Normal por defecto
     }
 
@@ -53,7 +78,6 @@ public class ControladorJuego : MonoBehaviour
         }
         else if (modoActual == ModoJuego.Desafio && faseActual == FaseDesafio.Jugando)
         {
-            // En desafío, SOLO suma puntos si estamos en la fase "Jugando" (no en descanso ni cuenta regresiva)
             puntosTotales += 1;
             ActualizarMarcadorUI();
         }
@@ -61,14 +85,10 @@ public class ControladorJuego : MonoBehaviour
 
     public void RestarPunto()
     {
-        // Solo restamos si estamos en Desafío y en plena fase de juego
         if (modoActual == ModoJuego.Desafio && faseActual == FaseDesafio.Jugando)
         {
             puntosTotales -= 1;
-            
-            // El truco mágico: Mathf.Max asegura que si el valor baja de 0, se quede clavado en 0
             puntosTotales = Mathf.Max(0, puntosTotales); 
-            
             ActualizarMarcadorUI();
         }
     }
@@ -82,9 +102,12 @@ public class ControladorJuego : MonoBehaviour
         puntosTotales = 0;
         
         if (textoTiempo != null) textoTiempo.text = "TIEMPO: --:--";
-        if (textoAnuncios != null) textoAnuncios.text = ""; // Limpiamos la pantalla
+        if (textoAnuncios != null) textoAnuncios.text = ""; 
         
         ActualizarMarcadorUI();
+
+        // 🎵 Transición a la música del Modo Normal
+        CambiarMusicaConTransicion(musicaNormal);
     }
 
     // --- BOTÓN MODO DESAFÍO ---
@@ -95,7 +118,9 @@ public class ControladorJuego : MonoBehaviour
         puntosTotales = 0;
         ActualizarMarcadorUI();
 
-        // Iniciamos la gran secuencia del desafío
+        // 🎵 Transición a la música de desafío
+        CambiarMusicaConTransicion(musicaDesafio);
+
         rutinaDesafioActual = StartCoroutine(SecuenciaModoDesafio());
     }
 
@@ -107,25 +132,87 @@ public class ControladorJuego : MonoBehaviour
         }
     }
 
+    // --- GESTIÓN DE AUDIO Y VOLUMEN ---
+    
+    /// <summary>
+    /// Función pública para cambiar el volumen desde un Slider de la UI u otro script.
+    /// Acepta valores entre 0.0 y 1.0.
+    /// </summary>
+    public void AjustarVolumen(float nuevoVolumen)
+    {
+        // Aseguramos que el valor esté entre 0 y 1
+        volumenMaster = Mathf.Clamp01(nuevoVolumen);
+
+        // Si no hay ninguna transición de Fade ejecutándose, aplicamos el volumen directamente
+        if (rutinaTransicionMusica == null && fuenteMusica != null)
+        {
+            fuenteMusica.volume = volumenMaster;
+        }
+    }
+
+    private void CambiarMusicaConTransicion(AudioClip nuevaPista)
+    {
+        if (fuenteMusica == null || nuevaPista == null) return;
+
+        if (fuenteMusica.clip == nuevaPista && fuenteMusica.isPlaying) return;
+
+        if (rutinaTransicionMusica != null) StopCoroutine(rutinaTransicionMusica);
+
+        rutinaTransicionMusica = StartCoroutine(RutinaFadeMusica(nuevaPista));
+    }
+
+    private IEnumerator RutinaFadeMusica(AudioClip nuevaPista)
+    {
+        // 1. FADE OUT: Disminuimos el volumen gradualmente tomando como tope el volumenMaster actual
+        if (fuenteMusica.isPlaying)
+        {
+            float volumenInicial = fuenteMusica.volume;
+            float tiempoAsignado = 0;
+
+            while (tiempoAsignado < duracionTransicion)
+            {
+                tiempoAsignado += Time.deltaTime;
+                fuenteMusica.volume = Mathf.Lerp(volumenInicial, 0f, tiempoAsignado / duracionTransicion);
+                yield return null;
+            }
+        }
+
+        // 2. CAMBIO DE CLIP
+        fuenteMusica.Stop();
+        fuenteMusica.clip = nuevaPista;
+        fuenteMusica.Play();
+
+        // 3. FADE IN: Subimos el volumen respetando el límite que tenga asignado volumenMaster
+        float tiempoTranscurrido = 0;
+        while (tiempoTranscurrido < duracionTransicion)
+        {
+            tiempoTranscurrido += Time.deltaTime;
+            fuenteMusica.volume = Mathf.Lerp(0f, volumenMaster, tiempoTranscurrido / duracionTransicion);
+            yield return null;
+        }
+
+        // Aseguramos precisión al concluir el desvanecimiento
+        fuenteMusica.volume = volumenMaster;
+        rutinaTransicionMusica = null; // Liberamos la referencia
+    }
+
     // --- LA LÍNEA DE TIEMPO DEL MODO DESAFÍO ---
     private IEnumerator SecuenciaModoDesafio()
     {
         for (int rondaActual = 1; rondaActual <= totalRondas; rondaActual++)
         {
-            // 1. FASE DE CUENTA REGRESIVA
             faseActual = FaseDesafio.CuentaRegresiva;
             textoTiempo.text = "RONDA " + rondaActual;
             
-            for (int i = 3; i > 0; i--) // Cuenta de 3, 2, 1...
+            for (int i = 3; i > 0; i--) 
             {
                 textoAnuncios.text = i.ToString();
                 yield return new WaitForSeconds(1f);
             }
             textoAnuncios.text = "¡COMIENZA!";
             yield return new WaitForSeconds(1f);
-            textoAnuncios.text = ""; // Borramos el texto
+            textoAnuncios.text = ""; 
             
-            // 2. FASE DE JUEGO (Cronómetro)
             faseActual = FaseDesafio.Jugando;
             tiempoRestante = tiempoPorRonda;
             
@@ -133,10 +220,9 @@ public class ControladorJuego : MonoBehaviour
             {
                 tiempoRestante -= Time.deltaTime;
                 ActualizarRelojUI();
-                yield return null; // Esperamos al siguiente frame
+                yield return null; 
             }
 
-            // 3. FASE DE DESCANSO (Solo si no es la última ronda)
             if (rondaActual < totalRondas)
             {
                 faseActual = FaseDesafio.Descanso;
@@ -146,12 +232,10 @@ public class ControladorJuego : MonoBehaviour
             }
         }
 
-        // 4. FIN DEL JUEGO
         faseActual = FaseDesafio.Terminado;
         textoAnuncios.text = "¡FIN DEL JUEGO!\nPuntaje: " + puntosTotales;
         textoTiempo.text = "FIN";
         
-        // Dejamos el mensaje final unos segundos y luego lo limpiamos
         yield return new WaitForSeconds(5f);
         if (faseActual == FaseDesafio.Terminado) textoAnuncios.text = ""; 
     }
