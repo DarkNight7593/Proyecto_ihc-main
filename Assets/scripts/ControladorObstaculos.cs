@@ -4,73 +4,80 @@ using UnityEngine;
 
 public class ControladorObstaculos : MonoBehaviour
 {
-[Header("Lista de Obstáculos")]
-    [Tooltip("Arrastra aquí todos los cubos semitransparentes de tu escena")]
-    public GameObject[] listaObstaculos;
+    [Header("Conexión con el Aro")]
+    [Tooltip("Arrastra aquí el objeto que tiene el script 'MovimientoAro'")]
+    public MovimientoAro scriptMovimientoAro;
+
+    [Header("Listas de Obstáculos")]
+    [Tooltip("Pon aquí los obstáculos que están CERCA del aro (Se usan siempre)")]
+    public List<GameObject> obstaculosCercaAro;
+    
+    [Tooltip("Pon aquí los obstáculos ALEJADOS (Solo se usan si el aro dinámico está activado)")]
+    public List<GameObject> obstaculosExtra;
 
     [Header("Ajustes de Aparición")]
-    public float tiempoAparicionMin = 4f; // Mínimo de segundos para aparecer
-    public float tiempoAparicionMax = 5f; // Máximo de segundos
-    public float tiempoActivoMin = 2f;    // Cuánto tiempo se quedan bloqueando
+    public float tiempoAparicionMin = 4f; 
+    public float tiempoAparicionMax = 5f; 
+    public float tiempoActivoMin = 2f;    
     public float tiempoActivoMax = 3.5f;
 
     void Start()
     {
-        // Al empezar el juego, nos aseguramos de que todos estén ocultos
         ApagarTodos();
-        
-        // Iniciamos el ciclo principal
         StartCoroutine(RutinaAparicionObstaculos());
     }
 
     private void ApagarTodos()
     {
-        foreach (GameObject obs in listaObstaculos)
-        {
-            if (obs != null) obs.SetActive(false);
-        }
+        foreach (GameObject obs in obstaculosCercaAro) if (obs != null) obs.SetActive(false);
+        foreach (GameObject obs in obstaculosExtra) if (obs != null) obs.SetActive(false);
     }
 
     IEnumerator RutinaAparicionObstaculos()
     {
         while (true)
         {
-            // 1. Esperamos 4 a 5 segundos
             yield return new WaitForSeconds(Random.Range(tiempoAparicionMin, tiempoAparicionMax));
 
-            // 2. Comprobamos si estamos jugando en modo Desafío
             if (ControladorJuego.Instancia != null && 
                 ControladorJuego.Instancia.modoActual == ModoJuego.Desafio && 
                 ControladorJuego.Instancia.faseActual == FaseDesafio.Jugando)
             {
-                // 3. Elegimos cuántos van a aparecer (1 o 2)
                 int cantidadAparecer = Random.Range(1, 3); 
                 
-                // 4. Seleccionamos los obstáculos al azar sin repetir
+                // Pedimos los obstáculos dependiendo de si el aro se mueve o no
                 List<GameObject> elegidos = ObtenerObstaculosAleatorios(cantidadAparecer);
 
-                // 5. Los encendemos
                 foreach (GameObject obs in elegidos)
                 {
                     if (obs != null) obs.SetActive(true);
                 }
 
-                // 6. Esperamos el tiempo que van a estar activos
                 yield return new WaitForSeconds(Random.Range(tiempoActivoMin, tiempoActivoMax));
 
-                // 7. Los volvemos a apagar
                 foreach (GameObject obs in elegidos)
                 {
-                    if (obs != null) obs.SetActive(false);
+                    // Los apagamos solo si no fueron golpeados (ya que si los golpean, se apagan solos)
+                    if (obs != null && obs.activeInHierarchy) obs.SetActive(false);
                 }
             }
         }
     }
 
-    // Función auxiliar para elegir cubos al azar sin que se repita el mismo dos veces
     private List<GameObject> ObtenerObstaculosAleatorios(int cantidad)
     {
-        List<GameObject> disponibles = new List<GameObject>(listaObstaculos);
+        // 1. Siempre metemos los que están cerca
+        List<GameObject> disponibles = new List<GameObject>(obstaculosCercaAro);
+        
+        // 2. MAGIA AQUÍ: Le preguntamos DIRECTAMENTE al script del aro si está activado
+        if (scriptMovimientoAro != null && scriptMovimientoAro.movimientoActivado)
+        {
+            disponibles.AddRange(obstaculosExtra);
+        }
+
+        // Limpiamos los que por casualidad ya estén encendidos para no repetir
+        disponibles.RemoveAll(obs => obs == null || obs.activeSelf);
+
         List<GameObject> seleccionados = new List<GameObject>();
 
         for (int i = 0; i < cantidad; i++)
@@ -79,7 +86,7 @@ public class ControladorObstaculos : MonoBehaviour
 
             int indiceRandom = Random.Range(0, disponibles.Count);
             seleccionados.Add(disponibles[indiceRandom]);
-            disponibles.RemoveAt(indiceRandom); // Lo quitamos para no volver a elegirlo
+            disponibles.RemoveAt(indiceRandom); 
         }
 
         return seleccionados;
