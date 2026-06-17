@@ -88,7 +88,7 @@ public class DeteccionObstaculo : MonoBehaviour
         if (prefabTextoPuntos != null)
         {
             // Aparece un poco por encima del obstáculo
-            GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 0.5f), Quaternion.identity);
+            GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 0.3f), Quaternion.identity);
             TextoFlotante scriptTxt = txt.GetComponent<TextoFlotante>();
             if (scriptTxt != null)
             {

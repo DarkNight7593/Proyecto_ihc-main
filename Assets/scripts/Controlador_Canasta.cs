@@ -22,6 +22,15 @@ public class Controlador_Canasta : MonoBehaviour
         if (luzDestello != null) luzDestello.enabled = false;
     }
 
+    // 🌟 TRUCO DE SEGURIDAD PARA MENÚS DE PAUSA 🌟
+    // Cada vez que la canasta se encienda (al cambiar entre Fijo/Dinámico),
+    // nos aseguramos de resetear el candado para que no se quede bloqueada.
+    void OnEnable()
+    {
+        canastaMarcada = false;
+        if (luzDestello != null) luzDestello.enabled = false;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("⚠️ Algo tocó el sensor del aro: " + other.gameObject.name);
@@ -48,21 +57,19 @@ public class Controlador_Canasta : MonoBehaviour
 
         if (prefabTextoPuntos != null)
         {
-            // Creamos el texto 1 metro arriba del aro
-            GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 1f), Quaternion.identity);
+            // Aparece a 0.3m del aro (más bajito, como pediste)
+            GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 0.3f), Quaternion.identity);
             TextoFlotante scriptTxt = txt.GetComponent<TextoFlotante>();
 
             if (scriptTxt != null)
             {
                 if (ControladorJuego.Instancia.modoActual == ModoJuego.Normal)
                 {
-                    // Amarillo oscuro/Dorado
                     Color amarilloDorado = new Color(1f, 0.7f, 0f);
                     scriptTxt.Configurar("+3", amarilloDorado); 
                 }
                 else
                 {
-                    // Verde para el desafío
                     scriptTxt.Configurar("+1", Color.green); 
                 }
             }
