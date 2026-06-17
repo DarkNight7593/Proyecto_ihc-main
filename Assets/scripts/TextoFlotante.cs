@@ -37,8 +37,17 @@ public class TextoFlotante : MonoBehaviour
 
     void Update()
     {
+        // 1. Movimiento hacia arriba
         transform.position += Vector3.up * velocidadSubida * Time.deltaTime;
 
+        // 2. ¡EL TRUCO ANTI-ESPEJO (BILLBOARDING)!
+        // Obligamos al texto a girar para que siempre mire directamente a la cámara principal
+        if (Camera.main != null)
+        {
+            transform.rotation = Quaternion.LookRotation(transform.position - Camera.main.transform.position);
+        }
+
+        // 3. Efectos visuales de desvanecimiento
         if (texto != null)
         {
             tiempoActual += Time.deltaTime;
