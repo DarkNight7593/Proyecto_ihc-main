@@ -42,7 +42,17 @@ public class MultiplicadorLanzamiento : MonoBehaviour
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
 
-        // Multiplicamos la fuerza
+        // 🌟 VALIDACIÓN DE GRAVEDAD 🌟
+        // Dependiendo de cómo definiste tu script de Gravedad en el menú de pausa:
+        // Si usas un booleano, un Enum en el ControladorJuego, o lees la gravedad física del proyecto.
+        // Aquí le decimos: Si la gravedad global es menor a la normal, NO multipliques (evitamos el misil).
+        if (Physics.gravity.y > -9.0f) 
+        {
+            Debug.Log("🚀 Gravedad Lunar detectada. Se desactiva el multiplicador para evitar efecto misil.");
+            yield break; // Cancela el resto de la corutina inmediatamente
+        }
+
+        // Si la gravedad está normal (-9.81), se ejecuta el código original perfectamente:
         rb.velocity = rb.velocity * multiplicadorVelocidad;
         rb.angularVelocity = rb.angularVelocity * 1.2f; 
         
