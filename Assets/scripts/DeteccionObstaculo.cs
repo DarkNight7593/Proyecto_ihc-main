@@ -1,13 +1,14 @@
 using System.Collections;
 using UnityEngine;
 
-// Esto obliga a Unity a añadir un AudioSource automáticamente a este objeto si no lo tiene
 [RequireComponent(typeof(AudioSource))]
 public class DeteccionObstaculo : MonoBehaviour
 {
     [Header("Efectos de Choque")]
-    [Tooltip("Arrastra aquí el sonido que hará al chocar")]
     public AudioClip sonidoChoque;
+    
+    [Header("Textos Flotantes")]
+    public GameObject prefabTextoPuntos;
 
     [Header("Configuración de Vibración VR (Castigo)")]
     [Range(0f, 1f)] public float frecuenciaVibracion = 1f;
@@ -26,11 +27,8 @@ public class DeteccionObstaculo : MonoBehaviour
     {
         meshRenderer = GetComponent<MeshRenderer>();
         miCollider = GetComponent<Collider>();
-        
-        // Agarramos el AudioSource
         audioSource = GetComponent<AudioSource>();
         
-        // Guardamos el color original
         if (meshRenderer != null)
         {
             colorOriginal = meshRenderer.material.color;
@@ -44,7 +42,6 @@ public class DeteccionObstaculo : MonoBehaviour
         
         if (miCollider != null) miCollider.enabled = true;
         
-        // CRUCIAL: Volvemos a hacer visible el cubo y le regresamos su color
         if (meshRenderer != null) 
         {
             meshRenderer.enabled = true; 
@@ -65,8 +62,6 @@ public class DeteccionObstaculo : MonoBehaviour
                 ControladorJuego.Instancia.RestarPunto();
             }
 
-            Debug.Log("💥 ¡Choque! Obstáculo rojo y Vibración VR Activada.");
-
             OVRInput.Controller mandoActivo = OVRInput.Controller.Active;
             if (mandoActivo != OVRInput.Controller.None)
             {
@@ -85,16 +80,22 @@ public class DeteccionObstaculo : MonoBehaviour
 
     IEnumerator EfectoImpacto()
     {
-        // 1. Apagamos física para que no rebote más
         if (miCollider != null) miCollider.enabled = false;
-
-        // 2. Lo ponemos rojo
         if (meshRenderer != null) meshRenderer.material.color = Color.red;
-
-        // 3. Empezamos el sonido
         if (sonidoChoque != null) audioSource.PlayOneShot(sonidoChoque);
 
-        // 4. Vibramos el cubo visualmente
+        // --- LANZAMOS EL TEXTO FLOTANTE ROJO ---
+        if (prefabTextoPuntos != null)
+        {
+            // Aparece un poco por encima del obstáculo
+            GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 0.5f), Quaternion.identity);
+            TextoFlotante scriptTxt = txt.GetComponent<TextoFlotante>();
+            if (scriptTxt != null)
+            {
+                scriptTxt.Configurar("-1", Color.red); 
+            }
+        }
+
         float tiempoVibracionCubo = 0.3f;
         float tiempoActual = 0f;
 
@@ -105,16 +106,12 @@ public class DeteccionObstaculo : MonoBehaviour
             yield return null;
         }
 
-        // Dejamos el cubo en su lugar original tras temblar
         transform.localPosition = posicionOriginal;
-
-        // 5. EN LUGAR DE APAGARLO, LO HACEMOS INVISIBLE
+        
         if (meshRenderer != null) meshRenderer.enabled = false;
 
-        // 6. Esperamos a que termine el audio antes de destruir/apagar el objeto
         if (sonidoChoque != null)
         {
-            // Calculamos cuánto tiempo le falta al audio tras la vibración
             float tiempoRestanteAudio = sonidoChoque.length - tiempoVibracionCubo;
             if (tiempoRestanteAudio > 0)
             {
@@ -122,7 +119,6 @@ public class DeteccionObstaculo : MonoBehaviour
             }
         }
 
-        // 7. Ahora sí, apagamos el objeto por completo
         gameObject.SetActive(false);
     }
 
