@@ -21,7 +21,9 @@ public class DeteccionObstaculo : MonoBehaviour
     
     private Color colorOriginal;
     private Vector3 posicionOriginal;
-    private bool yaGolpeado = false;
+    
+    // 🔥 CAMBIO: Ahora es public para que el Controlador pueda saber si ya chocó
+    public bool yaGolpeado = false;
 
     void Awake()
     {
@@ -87,7 +89,6 @@ public class DeteccionObstaculo : MonoBehaviour
         // --- LANZAMOS EL TEXTO FLOTANTE ROJO ---
         if (prefabTextoPuntos != null)
         {
-            // Aparece un poco por encima del obstáculo
             GameObject txt = Instantiate(prefabTextoPuntos, transform.position + (Vector3.up * 0.3f), Quaternion.identity);
             TextoFlotante scriptTxt = txt.GetComponent<TextoFlotante>();
             if (scriptTxt != null)

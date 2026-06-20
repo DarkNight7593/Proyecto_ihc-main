@@ -5,114 +5,145 @@ using UnityEngine;
 public class RetornoBalon : MonoBehaviour
 {
     [Header("Configuración de Retorno")]
-    [Tooltip("El objeto vacío donde reaparecerá el balón")]
     public Transform puntoDeRetorno; 
-    public float tiempoParaRetorno = 3f; // Tiempo en segundos
+
+    [Header("Tiempos y Límites (Nueva Lógica)")]
+    public float tiempoEnSueloMax = 1f; 
+    public float tiempoEnAroMax = 3f; 
+    public int maxBotesPermitidos = 3;
 
     [Header("Superficies Válidas (Tags)")]
-    [Tooltip("Añade aquí los tags que se consideran suelo para que el balón cuente el tiempo")]
-    public List<string> tagsConsideradosSuelo = new List<string> { "rebote_suelo", "rebote_madera" };
+    public List<string> tagsSuelo = new List<string> { "rebote_suelo", "rebote_madera" };
+    public List<string> tagsAro = new List<string> { "rebote_aro" };
 
     [Header("Configuración de Audio")]
-    [Tooltip("El componente AudioSource que reproducirá el sonido")]
     public AudioSource audioSource;
-    [Tooltip("El clip de sonido que sonará al reaparecer")]
     public AudioClip sonidoRespawn;
     [Range(0f, 2f)] public float volumenRespawn = 1.5f;
 
-    private float tiempoEnElSuelo = 0f;
-    private bool estaEnElSuelo = false;
+    [HideInInspector] public float tiempoUltimoRetorno = 0f;
+
+    private float cronometroSuelo = 0f;
+    private float cronometroAro = 0f;
+    private float tiempoDesdeUltimoBote = 0f; 
     
-    // NUEVO: Contador para saber cuántos objetos de suelo estamos tocando al mismo tiempo
+    private int contadorBotes = 0;
     private int contactosSuelo = 0; 
+    private int contactosAro = 0; 
+    
     private Rigidbody rb;
+    private enum TipoSuperficie { Ninguna, Suelo, Aro }
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        // PREVENCIÓN: Si el jugador agarra el balón, Meta XR suele poner el Rigidbody en Kinematic.
-        // Si es Kinematic (fuera de nuestro teletransporte), detenemos el contador para que no desaparezca de tus manos.
         if (rb != null && rb.isKinematic)
         {
             ResetearContadores();
             return;
         }
 
-        if (estaEnElSuelo)
-        {
-            tiempoEnElSuelo += Time.deltaTime;
+        tiempoDesdeUltimoBote += Time.deltaTime;
 
-            if (tiempoEnElSuelo >= tiempoParaRetorno)
+        if (contactosSuelo > 0)
+        {
+            cronometroSuelo += Time.deltaTime;
+            if (cronometroSuelo >= tiempoEnSueloMax)
             {
                 TeletransportarBalon();
+                return;
             }
         }
+        else cronometroSuelo = 0f;
+
+        if (contactosAro > 0)
+        {
+            cronometroAro += Time.deltaTime;
+            if (cronometroAro >= tiempoEnAroMax)
+            {
+                TeletransportarBalon();
+                return;
+            }
+        }
+        else cronometroAro = 0f; 
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (EsUnaSuperficieValida(collision.gameObject))
+        TipoSuperficie sup = EvaluarSuperficie(collision.gameObject);
+
+        if (sup != TipoSuperficie.Ninguna)
         {
-            contactosSuelo++; // Sumamos un contacto válido
-            estaEnElSuelo = true;
+            if (tiempoDesdeUltimoBote > 0.15f)
+            {
+                tiempoDesdeUltimoBote = 0f;
+
+                // 🔥 NUEVO AJUSTE: Solo contamos botes si toca el suelo o la madera.
+                // El aro ya no suma puntos de rebote, permitiendo rebotes infinitos ahí.
+                if (sup == TipoSuperficie.Suelo)
+                {
+                    contadorBotes++;
+
+                    if (contadorBotes >= maxBotesPermitidos)
+                    {
+                        TeletransportarBalon();
+                        return; 
+                    }
+                }
+            }
+
+            if (sup == TipoSuperficie.Suelo) contactosSuelo++;
+            if (sup == TipoSuperficie.Aro) contactosAro++;
         }
     }
 
-    // NUEVO: Failsafe (Salvavidas) 
-    // Si Unity por algún motivo "pierde" el evento Enter, el Stay nos asegura que sepa que está en el suelo.
     void OnCollisionStay(Collision collision)
     {
-        if (!estaEnElSuelo && EsUnaSuperficieValida(collision.gameObject))
-        {
-            contactosSuelo = 1;
-            estaEnElSuelo = true;
-        }
+        TipoSuperficie sup = EvaluarSuperficie(collision.gameObject);
+        if (sup == TipoSuperficie.Suelo && contactosSuelo == 0) contactosSuelo = 1;
+        if (sup == TipoSuperficie.Aro && contactosAro == 0) contactosAro = 1;
     }
 
     void OnCollisionExit(Collision collision)
     {
-        if (EsUnaSuperficieValida(collision.gameObject))
+        TipoSuperficie sup = EvaluarSuperficie(collision.gameObject);
+        
+        if (sup == TipoSuperficie.Suelo)
         {
-            contactosSuelo--; // Restamos un contacto
-
-            // Solo si dejamos de tocar TODOS los suelos válidos, detenemos el reloj
-            if (contactosSuelo <= 0)
-            {
-                ResetearContadores();
-            }
+            contactosSuelo--;
+            if (contactosSuelo < 0) contactosSuelo = 0;
+        }
+        if (sup == TipoSuperficie.Aro)
+        {
+            contactosAro--;
+            if (contactosAro < 0) contactosAro = 0;
         }
     }
 
-    private bool EsUnaSuperficieValida(GameObject objeto)
+    private TipoSuperficie EvaluarSuperficie(GameObject objeto)
     {
-        if (tagsConsideradosSuelo.Contains(objeto.tag))
-        {
-            return true;
-        }
+        if (tagsSuelo.Contains(objeto.tag)) return TipoSuperficie.Suelo;
+        if (tagsAro.Contains(objeto.tag)) return TipoSuperficie.Aro;
         
         if (objeto.transform.parent != null)
         {
             GameObject padre = objeto.transform.parent.gameObject;
-            if (tagsConsideradosSuelo.Contains(padre.tag))
-            {
-                return true;
-            }
+            if (tagsSuelo.Contains(padre.tag)) return TipoSuperficie.Suelo;
+            if (tagsAro.Contains(padre.tag)) return TipoSuperficie.Aro;
         }
 
-        return false;
+        return TipoSuperficie.Ninguna;
     }
 
     private void TeletransportarBalon()
     {
+        tiempoUltimoRetorno = Time.time; 
+
         if (rb != null)
         {
             rb.isKinematic = true; 
@@ -123,25 +154,29 @@ public class RetornoBalon : MonoBehaviour
         transform.position = puntoDeRetorno.position;
         transform.rotation = puntoDeRetorno.rotation;
 
-        if (audioSource != null && sonidoRespawn != null)
+        if (audioSource != null)
         {
-            audioSource.volume = volumenRespawn;
-            audioSource.PlayOneShot(sonidoRespawn);
+            audioSource.Stop(); 
+            
+            if (sonidoRespawn != null)
+            {
+                audioSource.volume = volumenRespawn;
+                audioSource.PlayOneShot(sonidoRespawn);
+            }
         }
 
-        if (rb != null)
-        {
-            rb.isKinematic = false; 
-        }
+        if (rb != null) rb.isKinematic = false; 
 
         ResetearContadores();
     }
 
-    // NUEVO: Función auxiliar para limpiar variables de forma segura
     private void ResetearContadores()
     {
         contactosSuelo = 0;
-        estaEnElSuelo = false;
-        tiempoEnElSuelo = 0f;
+        contactosAro = 0;
+        cronometroSuelo = 0f;
+        cronometroAro = 0f;
+        contadorBotes = 0;
+        tiempoDesdeUltimoBote = 0f;
     }
 }

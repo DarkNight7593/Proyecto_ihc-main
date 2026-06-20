@@ -49,7 +49,7 @@ public class MovimientoAro : MonoBehaviour
         bool debeMoverseAhora = false;
 
         if (movimientoActivado && ControladorJuego.Instancia != null)
-            {
+        {
             if (ControladorJuego.Instancia.modoActual == ModoJuego.Normal)
             {
                 debeMoverseAhora = true;
@@ -76,9 +76,12 @@ public class MovimientoAro : MonoBehaviour
             }
             else if (ControladorJuego.Instancia.modoActual == ModoJuego.Desafio)
             {
-                float baseX = Mathf.Sin(tiempoInterno * velocidadDesafio) * distanciaDesafioX;
-                float baseY = Mathf.Sin(tiempoInterno * velocidadDesafio * 2f) * distanciaDesafioY;
-                float baseZ = Mathf.Cos(tiempoInterno * velocidadDesafio * 0.7f) * distanciaDesafioZ;
+                // 🛠️ MODIFICACIÓN: Multiplicamos 'velocidadDesafio' por 0.8f para reducirla un 20%
+                float velReducida = velocidadDesafio * 0.8f;
+
+                float baseX = Mathf.Sin(tiempoInterno * velReducida) * distanciaDesafioX;
+                float baseY = Mathf.Sin(tiempoInterno * velReducida * 2f) * distanciaDesafioY;
+                float baseZ = Mathf.Cos(tiempoInterno * velReducida * 0.7f) * distanciaDesafioZ;
 
                 float ruidoX = (Mathf.PerlinNoise(tiempoInterno * velocidadRuido, 0f) - 0.5f) * magnitudRuido;
                 float ruidoY = (Mathf.PerlinNoise(0f, tiempoInterno * velocidadRuido) - 0.5f) * magnitudRuido;

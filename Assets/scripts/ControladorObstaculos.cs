@@ -57,8 +57,17 @@ public class ControladorObstaculos : MonoBehaviour
 
                 foreach (GameObject obs in elegidos)
                 {
-                    // Los apagamos solo si no fueron golpeados (ya que si los golpean, se apagan solos)
-                    if (obs != null && obs.activeInHierarchy) obs.SetActive(false);
+                    // 🔥 CAMBIO AQUÍ: Verificamos si el obstáculo NO ha sido golpeado.
+                    // Si ya fue golpeado, NO lo apagamos y dejamos que termine su audio/animación.
+                    if (obs != null && obs.activeInHierarchy)
+                    {
+                        DeteccionObstaculo deteccion = obs.GetComponent<DeteccionObstaculo>();
+                        
+                        if (deteccion == null || !deteccion.yaGolpeado)
+                        {
+                            obs.SetActive(false);
+                        }
+                    }
                 }
             }
         }

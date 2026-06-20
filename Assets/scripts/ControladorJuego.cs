@@ -3,7 +3,6 @@ using UnityEngine;
 using TMPro;
 
 public enum ModoJuego { Normal, Desafio }
-// Añadimos estados internos para saber en qué fase del desafío estamos
 public enum FaseDesafio { Inactivo, CuentaRegresiva, Jugando, Descanso, Terminado }
 
 public class ControladorJuego : MonoBehaviour
@@ -14,37 +13,47 @@ public class ControladorJuego : MonoBehaviour
     public ModoJuego modoActual = ModoJuego.Normal;
     public FaseDesafio faseActual = FaseDesafio.Inactivo;
 
-    [Header("UI del Marcador")]
+    [Header("UI y Marcador")]
     public TextMeshProUGUI textoMarcador;
     public TextMeshProUGUI textoTiempo; 
     
     [Header("UI de Anuncios Gigantes")]
-    [Tooltip("Arrastra aquí el texto semitransparente del centro de la pantalla")]
     public TextMeshProUGUI textoAnuncios; 
 
     private int puntosTotales = 0;
     
     [Header("Ajustes de Rondas (Desafío)")]
     public int totalRondas = 3;
-    public float tiempoPorRonda = 60f; // 60 segundos por ronda
-    public float tiempoDescanso = 10f; // 10 segundos de respiro
+    public float tiempoPorRonda = 60f;
+    public float tiempoDescanso = 10f;
     
     private float tiempoRestante;
-    private Coroutine rutinaDesafioActual; // Para poder detenerla si cambiamos de modo
+    private Coroutine rutinaDesafioActual;
 
-    [Header("🎵 Sistema de Música de Fondo")]
-    [Tooltip("El componente AudioSource asignado al GameManager")]
+    [Header("🎵 Sistema de Audio (Asignar Canales)")]
     public AudioSource fuenteMusica;
-    [Tooltip("Canción para el Modo Normal")]
-    public AudioClip musicaNormal;
-    [Tooltip("Canción intensa para el Modo Desafío")]
-    public AudioClip musicaDesafio;
-    [Tooltip("Tiempo en segundos que tardará en desvanecerse la música al cambiar")]
-    public float duracionTransicion = 0.8f;
+    public AudioSource fuenteSFX;
+    public AudioSource fuenteVoz; // 🔥 NUEVO: Ahora expuesto en el Inspector para que lo asignes
 
-    [Range(0f, 1f)]
-    [Tooltip("Volumen general de la música (0 = Silencio, 1 = Máximo)")]
-    public float volumenMaster = 0.5f; // Empezamos a mitad de volumen por defecto
+    [Header("🎵 Música")]
+    public AudioClip musicaNormal;
+    public AudioClip musicaDesafio;
+    public float duracionTransicion = 0.8f;
+    [Range(0f, 1f)] public float volumenMaster = 0.3f; 
+
+    [Header("🔊 Efectos de Voz y Sonido (SFX)")]
+    [Tooltip("Tu archivo largo '3 2 1 Go green screen'")]
+    public AudioClip audioConteoCompleto;
+    
+    [Tooltip("Sonido/Aplausos que sonarán de fondo ANTES de que salga la ronda y durante el conteo")]
+    public AudioClip audioInicioRonda;
+    
+    [Range(0f, 1f)] public float volumenAplausos = 0.5f; 
+    
+    [Tooltip("Sonido para el inicio del tiempo de descanso")]
+    public AudioClip audioDescanso;
+    [Tooltip("Sonido de victoria/fin de juego completo")]
+    public AudioClip audioFinJuego;
 
     private Coroutine rutinaTransicionMusica;
 
@@ -56,31 +65,34 @@ public class ControladorJuego : MonoBehaviour
 
     void Start()
     {
-        // Si no se asignó en el inspector, intentamos obtener el AudioSource del mismo objeto
-        if (fuenteMusica == null) fuenteMusica = GetComponent<AudioSource>();
+        // 🔥 LÓGICA ACTUALIZADA: Reconoce los 3 AudioSource si no los has asignado a mano
+        AudioSource[] fuentes = GetComponents<AudioSource>();
+        if (fuentes.Length >= 3)
+        {
+            if (fuenteMusica == null) fuenteMusica = fuentes[0];
+            if (fuenteSFX == null) fuenteSFX = fuentes[1];
+            if (fuenteVoz == null) fuenteVoz = fuentes[2];
+        }
+        else if (fuentes.Length == 2)
+        {
+            if (fuenteMusica == null) fuenteMusica = fuentes[0];
+            if (fuenteSFX == null) fuenteSFX = fuentes[1];
+        }
 
         if (fuenteMusica != null)
         {
             fuenteMusica.volume = volumenMaster;
-            fuenteMusica.loop = true; // Nos aseguramos de que repita la música
+            fuenteMusica.loop = true; 
         }
 
-        ActivarModoNormal(); // Empezamos en Normal por defecto
+        ActivarModoNormal();
     }
 
-    // --- LÓGICA DE PUNTUACIÓN ---
     public void RegistrarCanasta()
     {
-        if (modoActual == ModoJuego.Normal)
-        {
-            puntosTotales += 3;
-            ActualizarMarcadorUI();
-        }
-        else if (modoActual == ModoJuego.Desafio && faseActual == FaseDesafio.Jugando)
-        {
-            puntosTotales += 1;
-            ActualizarMarcadorUI();
-        }
+        if (modoActual == ModoJuego.Normal) puntosTotales += 3;
+        else if (modoActual == ModoJuego.Desafio && faseActual == FaseDesafio.Jugando) puntosTotales += 1;
+        ActualizarMarcadorUI();
     }
 
     public void RestarPunto()
@@ -93,7 +105,6 @@ public class ControladorJuego : MonoBehaviour
         }
     }
 
-    // --- BOTÓN MODO NORMAL ---
     public void ActivarModoNormal()
     {
         DetenerDesafioSiExiste();
@@ -102,15 +113,12 @@ public class ControladorJuego : MonoBehaviour
         puntosTotales = 0;
         
         if (textoTiempo != null) textoTiempo.text = "TIEMPO: --:--";
-        if (textoAnuncios != null) textoAnuncios.text = ""; 
+        if (textoAnuncios != null) textoAnuncios.text = "";
         
         ActualizarMarcadorUI();
-
-        // 🎵 Transición a la música del Modo Normal
         CambiarMusicaConTransicion(musicaNormal);
     }
 
-    // --- BOTÓN MODO DESAFÍO ---
     public void ActivarModoDesafio()
     {
         DetenerDesafioSiExiste();
@@ -118,52 +126,118 @@ public class ControladorJuego : MonoBehaviour
         puntosTotales = 0;
         ActualizarMarcadorUI();
 
-        // 🎵 Transición a la música de desafío
         CambiarMusicaConTransicion(musicaDesafio);
-
         rutinaDesafioActual = StartCoroutine(SecuenciaModoDesafio());
     }
 
     private void DetenerDesafioSiExiste()
     {
-        if (rutinaDesafioActual != null)
-        {
-            StopCoroutine(rutinaDesafioActual);
-        }
+        if (rutinaDesafioActual != null) StopCoroutine(rutinaDesafioActual);
+        if (textoAnuncios != null) textoAnuncios.text = "";
     }
 
-    // --- GESTIÓN DE AUDIO Y VOLUMEN ---
-    
-    /// <summary>
-    /// Función pública para cambiar el volumen desde un Slider de la UI u otro script.
-    /// Acepta valores entre 0.0 y 1.0.
-    /// </summary>
-    public void AjustarVolumen(float nuevoVolumen)
+    // --- SECUENCIA ARCADÉ OPTIMIZADA ---
+    private IEnumerator SecuenciaModoDesafio()
     {
-        // Aseguramos que el valor esté entre 0 y 1
-        volumenMaster = Mathf.Clamp01(nuevoVolumen);
-
-        // Si no hay ninguna transición de Fade ejecutándose, aplicamos el volumen directamente
-        if (rutinaTransicionMusica == null && fuenteMusica != null)
+        for (int rondaActual = 1; rondaActual <= totalRondas; rondaActual++)
         {
-            fuenteMusica.volume = volumenMaster;
+            faseActual = FaseDesafio.CuentaRegresiva;
+            textoTiempo.text = "RONDA " + rondaActual;
+            
+            // 💥 1. DISPARAMOS LOS APLAUSOS (Al 50% de volumen en el canal SFX)
+            if (fuenteSFX != null && audioInicioRonda != null)
+            {
+                fuenteSFX.PlayOneShot(audioInicioRonda, volumenAplausos);
+            }
+
+            yield return new WaitForSeconds(0.5f);
+
+            // 💥 2. APARECE EL TEXTO DE LA RONDA
+            textoAnuncios.text = $"<color=yellow><size=80%><b>RONDA {rondaActual}</b></size></color>";
+
+            yield return new WaitForSeconds(2.8f);
+            
+            // 💥 3. ENTRA LA VOZ DEL "3, 2, 1" (En su propio canal independiente)
+            if (fuenteVoz != null && audioConteoCompleto != null)
+            {
+                fuenteVoz.PlayOneShot(audioConteoCompleto);
+            }
+            
+            // 💥 4. CUENTA REGRESIVA VISUAL
+            for (int i = 3; i > 0; i--) 
+            {
+                textoAnuncios.text = $"<color=#FF4500><size=220%><b>{i}</b></size></color>";
+                yield return new WaitForSeconds(1f);
+            }
+            
+            // 💥 5. ¡A ENCESTAR!
+            textoAnuncios.text = "<color=green><size=90%><b>¡A ENCESTAR!</b></size></color>";
+            
+            yield return new WaitForSeconds(1f);
+            textoAnuncios.text = ""; 
+            
+            // --- FASE DE JUEGO ACTIVO ---
+            faseActual = FaseDesafio.Jugando;
+            tiempoRestante = tiempoPorRonda;
+            
+            while (tiempoRestante > 0)
+            {
+                tiempoRestante -= Time.deltaTime;
+                ActualizarRelojUI();
+                yield return null; 
+            }
+
+            // 💥 6. DESCANSO ENTRE RONDAS
+            if (rondaActual < totalRondas)
+            {
+                faseActual = FaseDesafio.Descanso;
+                textoTiempo.text = "DESCANSO";
+                
+                if (fuenteSFX != null && audioDescanso != null)
+                {
+                    fuenteSFX.PlayOneShot(audioDescanso);
+                }
+
+                float tiempoDescansoRestante = tiempoDescanso;
+                while (tiempoDescansoRestante > 0)
+                {
+                    int seg = Mathf.CeilToInt(tiempoDescansoRestante);
+                    textoAnuncios.text = $"<color=#00FFFF><size=80%><b>¡DESCANSO!</b></size>\n<size=140%><b>{seg}</b></size></color>";
+                    
+                    tiempoDescansoRestante -= Time.deltaTime;
+                    yield return null;
+                }
+            }
         }
+
+        // 💥 7. PANTALLA DE FIN DE JUEGO
+        faseActual = FaseDesafio.Terminado;
+        textoTiempo.text = "FIN";
+        
+        if (fuenteSFX != null && audioFinJuego != null)
+        {
+            fuenteSFX.PlayOneShot(audioFinJuego);
+        }
+        
+        textoAnuncios.text = $"<color=red><size=80%><b>¡JUEGO TERMINADO!</b></size></color>\n" +
+                             $"<color=white><size=50%>Puntaje Final:</size></color>\n" +
+                             $"<color=#FFD700><size=140%><b>{puntosTotales} PTS</b></size></color>";
+        
+        yield return new WaitForSeconds(6f);
+        if (faseActual == FaseDesafio.Terminado) textoAnuncios.text = ""; 
     }
 
     private void CambiarMusicaConTransicion(AudioClip nuevaPista)
     {
         if (fuenteMusica == null || nuevaPista == null) return;
-
         if (fuenteMusica.clip == nuevaPista && fuenteMusica.isPlaying) return;
 
         if (rutinaTransicionMusica != null) StopCoroutine(rutinaTransicionMusica);
-
         rutinaTransicionMusica = StartCoroutine(RutinaFadeMusica(nuevaPista));
     }
 
     private IEnumerator RutinaFadeMusica(AudioClip nuevaPista)
     {
-        // 1. FADE OUT: Disminuimos el volumen gradualmente tomando como tope el volumenMaster actual
         if (fuenteMusica.isPlaying)
         {
             float volumenInicial = fuenteMusica.volume;
@@ -177,12 +251,10 @@ public class ControladorJuego : MonoBehaviour
             }
         }
 
-        // 2. CAMBIO DE CLIP
         fuenteMusica.Stop();
         fuenteMusica.clip = nuevaPista;
         fuenteMusica.Play();
 
-        // 3. FADE IN: Subimos el volumen respetando el límite que tenga asignado volumenMaster
         float tiempoTranscurrido = 0;
         while (tiempoTranscurrido < duracionTransicion)
         {
@@ -191,68 +263,16 @@ public class ControladorJuego : MonoBehaviour
             yield return null;
         }
 
-        // Aseguramos precisión al concluir el desvanecimiento
         fuenteMusica.volume = volumenMaster;
-        rutinaTransicionMusica = null; // Liberamos la referencia
+        rutinaTransicionMusica = null; 
     }
 
-    // --- LA LÍNEA DE TIEMPO DEL MODO DESAFÍO ---
-    private IEnumerator SecuenciaModoDesafio()
-    {
-        for (int rondaActual = 1; rondaActual <= totalRondas; rondaActual++)
-        {
-            faseActual = FaseDesafio.CuentaRegresiva;
-            textoTiempo.text = "RONDA " + rondaActual;
-            
-            for (int i = 3; i > 0; i--) 
-            {
-                textoAnuncios.text = i.ToString();
-                yield return new WaitForSeconds(1f);
-            }
-            textoAnuncios.text = "¡COMIENZA!";
-            yield return new WaitForSeconds(1f);
-            textoAnuncios.text = ""; 
-            
-            faseActual = FaseDesafio.Jugando;
-            tiempoRestante = tiempoPorRonda;
-            
-            while (tiempoRestante > 0)
-            {
-                tiempoRestante -= Time.deltaTime;
-                ActualizarRelojUI();
-                yield return null; 
-            }
-
-            if (rondaActual < totalRondas)
-            {
-                faseActual = FaseDesafio.Descanso;
-                textoAnuncios.text = "¡TIEMPO!\nToma aire por " + tiempoDescanso + "s";
-                textoTiempo.text = "DESCANSO";
-                yield return new WaitForSeconds(tiempoDescanso);
-            }
-        }
-
-        faseActual = FaseDesafio.Terminado;
-        textoAnuncios.text = "¡FIN DEL JUEGO!\nPuntaje: " + puntosTotales;
-        textoTiempo.text = "FIN";
-        
-        yield return new WaitForSeconds(5f);
-        if (faseActual == FaseDesafio.Terminado) textoAnuncios.text = ""; 
-    }
-
-    // --- ACTUALIZACIÓN VISUAL ---
-    void ActualizarMarcadorUI()
-    {
-        if (textoMarcador != null) textoMarcador.text = "SCORE: " + puntosTotales.ToString("00");
-    }
+    void ActualizarMarcadorUI() => textoMarcador.text = "SCORE: " + puntosTotales.ToString("00");
 
     void ActualizarRelojUI()
     {
-        if (textoTiempo != null)
-        {
-            int minutos = Mathf.FloorToInt(tiempoRestante / 60);
-            int segundos = Mathf.FloorToInt(tiempoRestante % 60);
-            textoTiempo.text = string.Format("TIEMPO: {0:00}:{1:00}", minutos, segundos);
-        }
+        int min = Mathf.FloorToInt(tiempoRestante / 60);
+        int seg = Mathf.FloorToInt(tiempoRestante % 60);
+        textoTiempo.text = string.Format("TIEMPO: {0:00}:{1:00}", min, seg);
     }
 }
