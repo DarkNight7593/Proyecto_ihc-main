@@ -8,10 +8,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
-  - enabled: 1
+  - enabled: 0
     path: Assets/Escena Single Player.unity
     guid: 058f914940dbc3d4e8b28f1292c89a33
-  - enabled: 0
+  - enabled: 1
     path: Assets/escena multijugador.unity
     guid: d006bae54a8188a48878f21ab9038e8c
   m_configObjects:
